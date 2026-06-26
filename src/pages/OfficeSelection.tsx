@@ -58,7 +58,7 @@ const OfficeSelection = () => {
 
       // Save to public.profiles database table
       const { error: updateError } = await supabase
-        .from("profiles" as unknown as "profiles")
+        .from("profiles")
         .update({ office_id: office.id })
         .eq("id", user.id);
 

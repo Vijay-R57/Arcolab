@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      offices: {
+        Row: {
+          id: string
+          name: string
+          city: string
+          country: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          city: string
+          country: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          city?: string
+          country?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          employee_id: string | null
+          full_name: string | null
+          office_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          employee_id?: string | null
+          full_name?: string | null
+          office_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          employee_id?: string | null
+          full_name?: string | null
+          office_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       analysis_logs: {
         Row: {
           id: string
