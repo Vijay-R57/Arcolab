@@ -19,6 +19,7 @@ interface Props {
   afterScore: number;
   beforeExplanation?: string;
   afterExplanation?: string;
+  driverNote?: string;
   defaultExpanded?: boolean;
 }
 
@@ -46,6 +47,7 @@ export default function ScoreExplanationCard({
   afterScore,
   beforeExplanation,
   afterExplanation,
+  driverNote,
   defaultExpanded = false,
 }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -199,6 +201,16 @@ export default function ScoreExplanationCard({
                   </span>
                   <p className="text-xs text-muted-foreground leading-relaxed italic">
                     {afterExplanation}
+                  </p>
+                </div>
+              )}
+              {driverNote && (
+                <div className="flex flex-col gap-1 bg-blue-500/5 dark:bg-blue-500/10 rounded-lg p-3 border border-blue-500/15">
+                  <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                    Score change explained
+                  </span>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {driverNote}
                   </p>
                 </div>
               )}

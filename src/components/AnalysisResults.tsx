@@ -182,6 +182,17 @@ const AnalysisResults = ({ data, beforeImage, afterImage, analysisTimestamp, bef
         addParagraph(`After: ${data.afterExplanations[cat.key]}`, 8, "normal", [100, 100, 100], 18, 3.5);
         y += 1;
       }
+      const driver = data.scoreDrivers?.[cat.key];
+      if (driver?.note) {
+        addParagraph(`Score change explained:`, 8, "bold", [37, 99, 71], 18, 3.5);
+        y += 1;
+        driver.note.split("\n").forEach((line: string) => {
+          if (line.trim()) {
+            addParagraph(line, 8, "normal", [100, 100, 100], 20, 3.5);
+            y += 0.5;
+          }
+        });
+      }
       y += 2;
     });
 
@@ -379,6 +390,7 @@ const AnalysisResults = ({ data, beforeImage, afterImage, analysisTimestamp, bef
               afterScore={data.afterScores[pillar.key]}
               beforeExplanation={data.beforeExplanations?.[pillar.key]}
               afterExplanation={data.afterExplanations?.[pillar.key]}
+              driverNote={data.scoreDrivers?.[pillar.key]?.note}
               defaultExpanded={false}
             />
           ))}

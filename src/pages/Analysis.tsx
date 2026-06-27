@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAnalysisPipeline } from "@/hooks/useAnalysisPipeline";
 import arcolabLogoSrc from "@/assets/arcolab-logo.png";
+import sampleBefore from "@/assets/sample-before.jpg";
+import sampleAfter from "@/assets/sample-after.jpg";
 
 // Resize and compress image to a max dimension to speed up AI analysis
 const resizeImage = (base64: string, maxDim = 1024): Promise<string> => {
@@ -152,6 +154,51 @@ const Analysis = () => {
   const officeName = office?.name ?? "Unknown Office";
   const { pipeline, results, analysisTimestamp, runAnalysis, reset } = useAnalysisPipeline(officeName);
   const loading = pipeline.stage !== "idle" && pipeline.stage !== "complete" && pipeline.stage !== "error";
+
+  const handleLoadDemoImages = async () => {
+    try {
+      const urlToBase64 = async (url: string): Promise<string> => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const now = new Date().toISOString();
+      const mockBeforeGeo: GeoMeta = { latitude: "13.0827", longitude: "80.2707", capturedAt: now };
+      const mockAfterGeo: GeoMeta = { latitude: "13.0827", longitude: "80.2707", capturedAt: now };
+
+      const b64Before = await urlToBase64(sampleBefore);
+      const b64After = await urlToBase64(sampleAfter);
+
+      const prefixedBefore = `__geo:13.0827,80.2707:Chennai Production Area__${b64Before}`;
+      const prefixedAfter = `__geo:13.0827,80.2707:Chennai Production Area__${b64After}`;
+
+      setBeforeUploadTime(now);
+      setAfterUploadTime(now);
+      setBeforeGeo(mockBeforeGeo);
+      setAfterGeo(mockAfterGeo);
+      setRawBefore(prefixedBefore);
+      setRawAfter(prefixedAfter);
+      setSelectedZone("Production");
+
+      toast({
+        title: "Demo Images Loaded",
+        description: "Before and After images loaded with Chennai geolocation tags. Ready to analyze.",
+      });
+    } catch (e) {
+      console.error("Failed to load demo images:", e);
+      toast({
+        title: "Error loading demo images",
+        description: "Failed to load static asset images. Please upload files manually.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleGeoDenied = useCallback(() => {
     setGeoError("Location access is required for 5S audit compliance. Please enable location permissions and try again.");
@@ -297,6 +344,14 @@ const Analysis = () => {
                 Upload before and after images of your workspace. Location is required for geotagging
                 and audit compliance.
               </p>
+              <button
+                onClick={handleLoadDemoImages}
+                id="btn-load-demo-images"
+                className="mt-4 inline-flex items-center gap-2 rounded-md bg-secondary border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary/80 transition-colors shadow-sm animate-fade-in"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                Load Demo Images (Chennai Production)
+              </button>
             </div>
 
             {/* Geo error banner */}

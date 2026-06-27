@@ -104,6 +104,7 @@ interface CVEngineResponse {
   lean_maintenance_explanation?: string;
   before_metrics?: unknown;
   after_metrics?: unknown;
+  score_drivers?: unknown;
 }
 
 /**
@@ -129,6 +130,26 @@ function transformCVResponse(cv: CVEngineResponse): Record<string, unknown> {
     sustain: e?.sustain ?? "",
   });
 
+  const mapDrivers = (d?: any) => {
+    if (!d) return undefined;
+    const mapPillar = (p?: any) => {
+      if (!p) return undefined;
+      return {
+        primaryMetric: p.primary_metric ?? "",
+        primaryValue: p.primary_value ?? 0,
+        impact: p.impact ?? "positive",
+        note: p.note ?? "",
+      };
+    };
+    return {
+      sort: mapPillar(d.sort),
+      setInOrder: mapPillar(d.set_in_order),
+      shine: mapPillar(d.shine),
+      standardize: mapPillar(d.standardize),
+      sustain: mapPillar(d.sustain),
+    };
+  };
+
   return {
     overview: cv.overview,
     beforeScores: mapScores(cv.before_scores),
@@ -146,5 +167,6 @@ function transformCVResponse(cv: CVEngineResponse): Record<string, unknown> {
     rawScoringMethod: cv.scoring_method || "CV Engine (Deterministic)",
     beforeMetrics: cv.before_metrics,
     afterMetrics: cv.after_metrics,
+    scoreDrivers: mapDrivers(cv.score_drivers),
   };
 }

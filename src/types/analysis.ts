@@ -46,6 +46,22 @@ export interface CVMetrics {
   workplace_std_dev: number;
 }
 
+// ── Score explainability drivers ─────────────────────────────────────────────
+export interface PillarDriver {
+  primaryMetric: string;
+  primaryValue: number;
+  impact: "positive" | "negative" | "neutral_industrial" | "provisional";
+  note: string;
+}
+
+export interface ScoreDrivers {
+  sort: PillarDriver;
+  setInOrder: PillarDriver;
+  shine: PillarDriver;
+  standardize: PillarDriver;
+  sustain: PillarDriver;
+}
+
 // ── Top-level analysis result (matches edge function response) ───────────────
 export interface AnalysisData {
   overview: string;
@@ -64,7 +80,9 @@ export interface AnalysisData {
   rawScoringMethod?: string;
   beforeMetrics?: CVMetrics;
   afterMetrics?: CVMetrics;
+  scoreDrivers?: ScoreDrivers;
 }
+
 
 // ── Analysis pipeline stages (for progress UX) ───────────────────────────────
 export type AnalysisStage =

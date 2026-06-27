@@ -114,6 +114,92 @@ async function invokeWithRetry(
   //   scoringMethod: "gemini-fallback"
   // };
 
+  if (import.meta.env.DEV) {
+    try {
+      console.log("[useAnalysisPipeline] Dev mode: Attempting direct call to local FastAPI at http://localhost:8000/analyze");
+      const localResponse = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          before_image: before,
+          after_image: after,
+        }),
+      });
+
+      if (localResponse.ok) {
+        const cvData = await localResponse.json();
+        console.log("[useAnalysisPipeline] Local FastAPI success:", cvData);
+        
+        const toPercent = (score20: number) => Math.round(Math.min(100, score20 * 5));
+        const mapScores = (s?: any) => ({
+          sort: s ? toPercent(s.sort ?? 0) : 0,
+          setInOrder: s ? toPercent(s.set_in_order ?? 0) : 0,
+          shine: s ? toPercent(s.shine ?? 0) : 0,
+          standardize: s ? toPercent(s.standardize ?? 0) : 0,
+          sustain: s ? toPercent(s.sustain ?? 0) : 0,
+        });
+        const mapExplanations = (e?: any) => ({
+          sort: e?.sort ?? "",
+          setInOrder: e?.set_in_order ?? "",
+          shine: e?.shine ?? "",
+          standardize: e?.standardize ?? "",
+          sustain: e?.sustain ?? "",
+        });
+        const mapDrivers = (d?: any) => {
+          if (!d) return undefined;
+          const mapPillar = (p?: any) => {
+            if (!p) return undefined;
+            return {
+              primaryMetric: p.primary_metric ?? "",
+              primaryValue: p.primary_value ?? 0,
+              impact: p.impact ?? "positive",
+              note: p.note ?? "",
+            };
+          };
+          return {
+            sort: mapPillar(d.sort),
+            setInOrder: mapPillar(d.set_in_order),
+            shine: mapPillar(d.shine),
+            standardize: mapPillar(d.standardize),
+            sustain: mapPillar(d.sustain),
+          };
+        };
+
+        const transformedData: AnalysisData = {
+          overview: cvData.overview,
+          beforeScores: mapScores(cvData.before_scores),
+          afterScores: mapScores(cvData.after_scores),
+          beforeExplanations: mapExplanations(cvData.before_explanations),
+          afterExplanations: mapExplanations(cvData.after_explanations),
+          recommendations: cvData.recommendations ?? [],
+          improvements: cvData.improvements ?? [],
+          rootCauseObservations: cvData.root_cause_observations ?? [],
+          safetyRecommendations: cvData.safety_recommendations ?? [],
+          leanMaintenanceScore: cvData.before_scores?.lean_maintenance ?? 0,
+          leanMaintenanceScoreAfter: cvData.after_scores?.lean_maintenance ?? 0,
+          leanMaintenanceExplanation: cvData.lean_maintenance_explanation ?? "",
+          scoringMethod: "CV Engine",
+          rawScoringMethod: cvData.scoring_method || "CV Engine (Deterministic)",
+          beforeMetrics: cvData.before_metrics,
+          afterMetrics: cvData.after_metrics,
+          scoreDrivers: mapDrivers(cvData.score_drivers),
+        };
+
+        if (validateAnalysisResponse(transformedData)) {
+          return transformedData;
+        } else {
+          console.warn("[useAnalysisPipeline] Local response failed validation, falling back to Supabase.");
+        }
+      } else {
+        console.warn("[useAnalysisPipeline] Local FastAPI returned non-2xx status, falling back to Supabase.");
+      }
+    } catch (localErr) {
+      console.warn("[useAnalysisPipeline] Local FastAPI connection failed, falling back to Supabase:", localErr);
+    }
+  }
+
   try {
     const { data, error } = await supabase.functions.invoke("analyze-5s", {
       body: { beforeImage: before, afterImage: after },
